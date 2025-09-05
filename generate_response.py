@@ -643,20 +643,41 @@ def call_gemini(prompt):
         return -1
 
 def call_chatgpt_o1(prompt):
-    completion = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ]
-    )
-    try:
-        return int(completion.choices[0].message.content.strip())
-    except ValueError:
-        return -1
+    # Use Gemini if OpenAI keys are dummy/empty, otherwise use OpenAI
+    openai_key = os.environ.get('OPENAI_API_KEY', '')
+    use_gemini = openai_key == "dummy" or openai_key == ""
+
+    if use_gemini:
+        # Use Gemini for evaluation
+        try:
+            response = gemini_model.generate_content(prompt)
+            result = response.text.strip()
+            try:
+                return int(result)
+            except ValueError:
+                # If Gemini returns non-numeric, try to extract number or return default
+                import re
+                numbers = re.findall(r'\d+', result)
+                return int(numbers[0]) if numbers else 1
+        except Exception as e:
+            print(f"Gemini evaluation error: {e}")
+            return 1  # Default fallback
+    else:
+        # Use OpenAI (original code)
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        )
+        try:
+            return int(completion.choices[0].message.content.strip())
+        except ValueError:
+            return -1
     
 def evaluate_clarifying_questions(
     missing_information='',
@@ -702,19 +723,32 @@ def evaluate_clarifying_questions(
                 clarifying_questions=clarifying_questions,
                 problem=problem
             )
-    completion = openai.ChatCompletion.create(
-        model=model,
-        n=topn,
-        temperature=temperature,
-        messages=[{
-            "role": "user",
-            "content": content,
-        }]
-    )
+    # Use Gemini if OpenAI keys are dummy/empty, otherwise use OpenAI
+    openai_key = os.environ.get('OPENAI_API_KEY', '')
+    use_gemini = openai_key == "dummy" or openai_key == ""
+
+    if use_gemini:
+        # Use Gemini for evaluation
+        try:
+            response = gemini_model.generate_content(content)
+            completion_content = response.text
+        except Exception as e:
+            print(f"Gemini evaluation error: {e}")
+            completion_content = "1"  # Default fallback
+    else:
+        # Use OpenAI (original code)
+        completion = openai.ChatCompletion.create(
+            model=model,
+            n=topn,
+            temperature=temperature,
+            messages=[{
+                "role": "user",
+                "content": content,
+            }]
+        )
+        completion_content = str(completion['choices'][0]['message']['content'])
     print('!!!!!!!PROMPT_EVALUATE_QUESTIONS='+content, file=print_file)
-    print('!!!!!!!Completion='+completion['choices'][0]['message']['content'], file=print_file)
-    # Convert completion content to a string if it's not already a string
-    completion_content = str(completion['choices'][0]['message']['content'])
+    print('!!!!!!!Completion='+completion_content, file=print_file)
 
     # Use re.findall() with the completion content
     question_quality = re.findall(r'QUALITY\s*=?\s*(\d+)', completion_content)
