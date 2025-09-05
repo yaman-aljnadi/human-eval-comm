@@ -37,11 +37,11 @@ from openai import OpenAI
 # set random seed
 set_seed(42)
 
-# "No module for CodeGeeX" error with this code. So this code is commented. Re-enable this and install CodeGeeX (https://github.com/jie-jw-wu/human-eval-comm/blob/main/README_AgentFramework.md) if running AgentCoder.
-#from AgentFramework.programmer import programmer_main
-#from AgentFramework.designer import designer_main
+# AgentFramework imports - enabled for AgentCoder functionality
+from AgentFramework.programmer import programmer_main
+from AgentFramework.designer import designer_main
 # working on the assumption that executor_main reads from generated files
-#from AgentFramework.executor import executor_main
+from AgentFramework.executor import executor_main
 
 B_INST_CLLAMA, E_INST_CLLAMA = "[INST]", "[/INST]"
 B_SYS_CLLAMA, E_SYS_CLLAMA = "<<SYS>>\n", "\n<</SYS>>\n\n"
@@ -49,7 +49,7 @@ openai.api_key = os.environ['OPENAI_KEY']
 openai.api_key = os.environ['OPENAI_API_KEY']
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=gemini_api_key)
-gemini_model = genai.GenerativeModel("gemini-pro")
+gemini_model = genai.GenerativeModel(os.getenv('EVALUATOR_MODEL'))
 client = OpenAI()
 PROMPT_START_0 = 'Generate Python3 code (Markdown):\n'
 PROMPT_START_1 = 'Generate either Python3 code only (Markdown) or no code:\n'
