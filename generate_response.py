@@ -736,17 +736,21 @@ def evaluate_clarifying_questions(
             print(f"Gemini evaluation error: {e}")
             completion_content = "1"  # Default fallback
     else:
-        # Use OpenAI (original code)
-        completion = openai.ChatCompletion.create(
-            model=model,
-            n=topn,
-            temperature=temperature,
-            messages=[{
-                "role": "user",
-                "content": content,
-            }]
-        )
-        completion_content = str(completion['choices'][0]['message']['content'])
+        # Use OpenAI (original code) - updated for new API
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                n=topn,
+                temperature=temperature,
+                messages=[{
+                    "role": "user",
+                    "content": content,
+                }]
+            )
+            completion_content = str(response.choices[0].message.content)
+        except Exception as e:
+            print(f"OpenAI API error: {e}")
+            completion_content = "1"
     print('!!!!!!!PROMPT_EVALUATE_QUESTIONS='+content, file=print_file)
     print('!!!!!!!Completion='+completion_content, file=print_file)
 
@@ -864,32 +868,64 @@ def calculate_percentage_integer(value, percentage):
 # legacy code (randRemove) where only one-round evaluation is enabled
 def description_2_code_one_round(prompt, model, topn, temperature, args, open_source_model, tokenizer):
     if model=='comm':
-        completion = openai.ChatCompletion.create(
-            model='gpt-3.5-turbo',
-            n=1,
-            temperature=temperature,
-            messages=[{"role": "user",
-                       "content": prompt},
-                      ]
-        )
+        # Use Gemini if OpenAI keys are dummy/empty, otherwise use OpenAI
+        openai_key = os.environ.get('OPENAI_API_KEY', '')
+        use_gemini = openai_key == "dummy" or openai_key == ""
+
+        if use_gemini:
+            try:
+                response = gemini_model.generate_content(prompt)
+                completion_content = response.text
+            except Exception as e:
+                print(f"Gemini error: {e}")
+                completion_content = "No response"
+        else:
+            completion = client.chat.completions.create(
+                model='gpt-3.5-turbo',
+                n=1,
+                temperature=temperature,
+                messages=[{"role": "user",
+                           "content": prompt},
+                          ]
+            )
+            completion_content = completion.choices[0].message.content
+
         first_response_list = []
-        for i in completion['choices']:
-            first_response_list.append(i['message']['content'])
+        if use_gemini:
+            first_response_list.append(completion_content)
+        else:
+            for i in completion.choices:
+                first_response_list.append(i.message.content)
 
         new_prompt = "You are an expert in software engineering. You will be given the problem description and current code of a coding task. You will decide whether to ask clarifying questions or return the code with markup. \n ### Problem Description: \n"+ prompt + "\n ### Generated Code From Previous Iteration:\n" + first_response_list[0]
         
-        completion = openai.ChatCompletion.create(
-            model='gpt-3.5-turbo',
-            n=topn,
-            temperature=temperature,
-            messages=[{"role": "user",
-                       "content": new_prompt},
-                      ]
-        )
+        # Use Gemini if OpenAI keys are dummy/empty, otherwise use OpenAI
+        openai_key = os.environ.get('OPENAI_API_KEY', '')
+        use_gemini = openai_key == "dummy" or openai_key == ""
+
+        if use_gemini:
+            try:
+                response = gemini_model.generate_content(new_prompt)
+                completion_content = response.text
+            except Exception as e:
+                print(f"Gemini error: {e}")
+                completion_content = "No response"
+        else:
+            completion = client.chat.completions.create(
+                model='gpt-3.5-turbo',
+                n=topn,
+                temperature=temperature,
+                messages=[{"role": "user",
+                           "content": new_prompt},
+                          ]
+            )
+
         response_list = []
-        # code_list = []
-        for i in completion['choices']:
-            response_list.append(i['message']['content'])
+        if use_gemini:
+            response_list.append(completion_content)
+        else:
+            for i in completion.choices:
+                response_list.append(i.message.content)
 
     else:
         messages=[{"role": "user", "content": prompt}]
@@ -971,8 +1007,8 @@ def generate_response(model, msgs, topn, temperature, args, open_source_model, t
             temperature=temperature,
             messages=msgs
         )
-        for i in completion['choices']:
-            response_list.append(i['message']['content'])
+        for i in completion.choices:
+            response_list.append(i.message.content)
         return response_list
 
 def description_2_code_multi_rounds(prompt_modified, task_id, entry_point, prompt, user_input, original_prompt, model, topn, temperature, args, open_source_model, tokenizer, cached_response, cached_qq, cached_answer):
@@ -1087,7 +1123,7 @@ def string_to_int(input_string):
 
 # Return the first triple code snippet. 
 def response_2_code(response):
-    code_template = re.compile('```.*\n([\s\S]+?)\n```', re.M)
+    code_template = re.compile(r'```.*\n([\s\S]+?)\n```', re.M)
     code = code_template.findall(response)
     if len(code) > 0:
         return code[0] # code[-1] is the last triple code snippet
