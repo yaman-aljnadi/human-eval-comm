@@ -1001,7 +1001,8 @@ def generate_response(model, msgs, topn, temperature, args, open_source_model, t
             response_list.append(str(responses[0]['completion_list']))
         return response_list
     else:
-        completion = openai.ChatCompletion.create(
+        client = openai.OpenAI()
+        completion = client.chat.completions.create(
             model=model,
             n=topn,
             temperature=temperature,

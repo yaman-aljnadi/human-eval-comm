@@ -67,7 +67,8 @@ def fetch_completion(data_entry, model, times=10):
         for _ in range(times):
             while True:
                 try:
-                    completions = openai.ChatCompletion.create(
+                    client = openai.OpenAI()
+                    completions = client.chat.completions.create(
                         model=model,
                         stream=False,
                         messages=[
@@ -76,7 +77,7 @@ def fetch_completion(data_entry, model, times=10):
                         ],
                         request_timeout=100,
                     )
-                    test_case = completions.choices[0]["message"]["content"]
+                    test_case = completions.choices[0].message.content
                     test_case = preprocess_data(test_case)
                 except Exception as e:
                     time.sleep(20)
