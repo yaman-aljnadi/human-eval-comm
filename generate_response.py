@@ -45,12 +45,19 @@ set_seed(42)
 
 B_INST_CLLAMA, E_INST_CLLAMA = "[INST]", "[/INST]"
 B_SYS_CLLAMA, E_SYS_CLLAMA = "<<SYS>>\n", "\n<</SYS>>\n\n"
-openai.api_key = os.environ['OPENAI_KEY']
-openai.api_key = os.environ['OPENAI_API_KEY']
+
+# Yaman Personal Tweaks 
+openai_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENAI_KEY")
+if openai_key:
+    openai.api_key = openai_key
+
+# openai.api_key = os.environ['OPENAI_KEY']
+# openai.api_key = os.environ['OPENAI_API_KEY']
+
 gemini_api_key = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=gemini_api_key)
 gemini_model = genai.GenerativeModel("gemini-pro")
-client = OpenAI()
+#client = OpenAI()
 PROMPT_START_0 = 'Generate Python3 code (Markdown):\n'
 PROMPT_START_1 = 'Generate either Python3 code only (Markdown) or no code:\n'
 PROMPT_START_2 = 'Generate either Python3 code only (Markdown) or ask questions:\n'
