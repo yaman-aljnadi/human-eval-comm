@@ -20,3 +20,75 @@ def candidate(numbers: List[float], threshold: float) -> bool:
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+********************************************************************
+****** new problem (name=HumanEval/0 input_prompt=prompt1a) ******
+********************************************************************
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!! prompt:
+You are an expert software developer who writes high quality code. With below information, please either generate Python3 code (Respond directly with code only with markdown), or ask clarifying questions: 
+ from typing import List
+
+
+def candidate(numbers: List[float], threshold: float) -> bool:
+    """ Check if in given list of numbers, are any two numbers meeting a certain condition (e.g. closer to or larger than each other than
+    given threshold).
+    >>> candidate([1.0, 2.0, 3.0], 0.5)
+    False
+    >>> candidate([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)
+    True
+    """
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!! 1st CodeLLM response:
+Sure, I can help with that. The condition you mentioned is that for any two numbers in the list, the absolute difference between them should be greater than or equal to the threshold. Here is the Python3 code:
+
+```python
+from typing import List
+
+def candidate(numbers: List[float], threshold: float) -> bool:
+    for i in range(len(numbers)):
+        for j in range(i+1, len(numbers)):
+            if abs(numbers[i] - numbers[j]) >= threshold:
+                return True
+    return False
+```
+
+This function iterates over all pairs of numbers in the list and checks if the absolute difference between them is greater than or equal to the threshold. If it finds such a pair, it immediately returns `True`. If it doesn't find any such pair after checking all pairs, it returns `False`.
+
+!!!!!!!!!!!!! 1st CodeLLM response code:
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!! 2nd evaluate_clarifying_questions START !!!!!!!!!!!
+********************************************************************
+****** new problem (name=HumanEval/0 input_prompt=prompt1c) ******
+********************************************************************
+
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!!!!!!!!!!!! prompt:
+You are an expert software developer who writes high quality code. With below information, please either generate Python3 code (Respond directly with code only with markdown), or ask clarifying questions: 
+ from typing import List
+
+
+def has_close_elements(numbers: List[float], threshold: float) -> bool:
+    """ Check if in given list of numbers, are any two numbers larger than each other than
+    given threshold.
+    >>> has_close_elements([1.0, 2.0, 3.0], 0.5)
+    False
+    >>> has_close_elements([1.0, 2.8, 3.0, 4.0, 5.0, 2.0], 0.3)
+    True
+    """
+
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
