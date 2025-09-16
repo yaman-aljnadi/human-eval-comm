@@ -34,6 +34,9 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, set_seed
 import google.generativeai as genai
 from openai import OpenAI
 
+if torch.cuda.is_available():
+    print(f"Current CUDA device name: {torch.cuda.get_device_name(0)}")
+
 # set random seed
 set_seed(42)
 
